@@ -8,3 +8,4 @@ gdown
 gensim
 scikit-learn
 scikeras
+Sastrawi
