@@ -315,4 +315,5 @@ def userInput():
     
     return render_template("user-input.html", active_page="user-input")
 
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
