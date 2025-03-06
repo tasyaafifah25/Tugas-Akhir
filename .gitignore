@@ -1,8 +1,8 @@
 /node_modules
 /myenv
 /__pycache__
-/models
 fasttext.bin
 fasttext.bin.wv.vectors_ngrams.npy
 new_model.h5
 new_tokenizer.json
+gru_model.h5

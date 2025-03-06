@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import tensorflow as tf
+import gdown
 from werkzeug.utils import secure_filename
 from flask import Flask, request, render_template
 from preprocessing import final_tokenize, preproc_until_stopwords
@@ -20,6 +22,16 @@ from tensorflow.keras.layers import Embedding, GRU, Dropout, Dense
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from scikeras.wrappers import KerasClassifier
 from sklearn.metrics import roc_curve
+
+# Load GRU Model
+url = "https://drive.google.com/uc?export=download&id=19ywu54-w5IN7kc4dG9NFsWsG-ufl5JSC"
+model_path = "gru_model.h5"
+try:
+    if not os.path.exists(model_path):
+        gdown.download(url, model_path, quiet=False)
+except Exception as e:
+    print("Gagal mendownload model:", e)
+default_gru_model = load_model(model_path)
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = 'secret-key-you-can-change'
@@ -188,8 +200,10 @@ def testing():
 
             df.dropna(subset=["text"], inplace=True)
 
-            model_path = "new_model.h5" if os.path.exists("new_model.h5") else "models/gru_model_84.h5"
-            model = load_model(model_path)
+            if os.path.exists("new_model.h5"):
+                model = load_model("new_model.h5")
+            else:
+                model = default_gru_model
 
             if os.path.exists("new_tokenizer.json"):
                 with open("new_tokenizer.json", "r", encoding="utf-8") as f:
@@ -269,11 +283,10 @@ def userInput():
     
         token_str = " ".join(tokens)
         
-        if os.path.exists("my_model.h5"):
-            model_path = "my_model.h5"
+        if os.path.exists("new_model.h5"):
+            model = load_model("new_model.h5")
         else:
-            model_path = "models/gru_model_84.h5" 
-        model = load_model(model_path)
+            model = default_gru_model
         
         if os.path.exists("tokenizer.json"):
             with open("tokenizer.json", "r", encoding="utf-8") as f:
