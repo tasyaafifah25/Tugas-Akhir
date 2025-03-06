@@ -25,7 +25,7 @@ from sklearn.metrics import roc_curve
 
 # Load GRU Model
 url = "https://drive.google.com/uc?export=download&id=19ywu54-w5IN7kc4dG9NFsWsG-ufl5JSC"
-model_path = "gru_model.h5"
+model_path = "/tmp/gru_model.h5"
 try:
     if not os.path.exists(model_path):
         gdown.download(url, model_path, quiet=False)
