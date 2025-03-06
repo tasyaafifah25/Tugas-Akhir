@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <title>Testing</title>
+</head>
+<body>
+    <div class="mx-auto bg-white">
+        <!-- Navbar -->
+        <div class="sticky top-0 z-50 shadow-md w-full py-4 bg-white mb-24">
+            <div class="container mx-auto">
+                <nav class="relative flex items-center justify-between sm:h-10 md:justify-center" aria-label="Global">
+                    <div class="hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:left-0">
+                        <span class="inline-flex">
+                            <a href="/" class="font-bold text-2xl text-primary">Tugas Akhir</a>
+                        </span>
+                    </div>
+                    <div class="hidden md:absolute md:flex md:space-x-10 md:items-center md:justify-end md:inset-y-0 md:right-0">
+                        <a href="/" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'home' %} border-b-2 text-primary border-primary{% endif %}">Beranda</a>
+                        <a href="/training" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'training' %} border-b-2 text-primary border-primary{% endif %}">Training</a>
+                        <a href="/testing" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'testing' %} border-b-2 text-primary border-primary{% endif %}">Testing</a>
+                        <a href="/user-input" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'user-input' %} border-b-2 text-primary border-primary{% endif %}">User Input</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <div class="container -mt-14 mx-auto">
+            <h1 class="text-2xl font-bold">Testing</h1>
+            <p class="text-base font-medium mt-4">Unggah dataset dengan ekstensi .csv untuk memulai testing.</p>
+            <form id="trainForm" action="{{ url_for('testing') }}" method="POST" enctype="multipart/form-data">
+                <div class="flex mt-4 space-x-4 items-center">
+                    <div class="border border-gray-400 rounded-lg w-full p-2 flex items-center">
+                        <!-- Tombol Choose File -->
+                        <label for="file_input" class="bg-gray-200 hover:bg-gray-300 text-sm text-gray-800 py-1.5 px-3 font-medium rounded-md cursor-pointer">
+                            Choose File
+                            <input id="file_input" name="csv_file" type="file" accept=".csv" class="hidden" onchange="updateFileName()" required>
+                        </label>
+                        
+                        <!-- Nama File atau Teks "No file chosen" -->
+                        <span id="file_name" class="ml-4 font-medium text-gray-900">No file chosen</span>
+                    </div>
+                    <button 
+                        type="submit"
+                        class="bg-[#71B8BA] w-48 px-4 py-3 text-white text-base font-medium rounded-lg hover:bg-[#5A9395] cursor-pointer"
+                        >
+                        Mulai Testing
+                    </button>
+                </div>
+                {% if error_msg %}
+                    <p class="text-red-600 text-sm mt-2">{{ error_msg }}</p>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Hasil Preprocessing -->
+        <div class="container">
+            <div id="loading-indicator" class="flex items-center justify-center mt-14" style="display: none;">
+                <div class="text-center">
+                    <img src="/static/images/loading.gif" class="h-28 mx-auto" alt="loading...">
+                    <p class="-mt-6 text-base font-medium text-main">
+                    Proses testing sedang berlangsung, mohon ditunggu...
+                    </p>
+                </div>
+            </div>
+
+            <div id="table-container">
+                <h2 class="font-bold text-xl mt-8">Hasil Testing</h2>  
+                {% if  df_display is defined and df_display %}
+                    <div class="px-4 sm:px-6 lg:px-8 mt-4 flex flex-col">
+                        <div class="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
+                            <!-- Kontrol PageSize + Navigasi -->
+                            <div class="mb-2 flex items-center space-x-4">
+                                <label for="page-size" class="font-medium text-sm text-gray-700">Tampilkan entri:</label>
+                                <select id="page-size" class="cursor-pointer border border-gray-300 rounded px-2 py-1 text-sm">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+    
+                                <button
+                                    id="prev-btn"
+                                    class="bg-white border border-gray-300 px-3 py-1.5 cursor-pointer rounded hover:bg-gray-300"
+                                >
+                                    <svg
+                                    class="stroke-[#2D2D2D] stroke-[3px]"
+                                    width="16px"
+                                    height="16px"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="2"
+                                    stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M15.75 19.5 8.25 12l7.5-7.5"
+                                        />
+                                    </svg>
+                                </button>
+    
+                                <button
+                                    id="next-btn"
+                                    class="bg-white border border-gray-300 px-3 py-1.5 cursor-pointer rounded hover:bg-gray-300"
+                                >
+                                    <svg
+                                    class="stroke-[#2D2D2D] stroke-[3px]"
+                                    width="16px"
+                                    height="16px"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="2"
+                                    stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                                        />
+                                    </svg>
+                                </button>
+    
+                                <span id="page-info" class="text-sm text-gray-600"></span>
+                            </div>
+    
+                            <div class="inline-block min-w-full py-2 align-middle">
+                                <div class="shadow-sm">
+                                    <table class="w-full table-fixed border-separate" style="border-spacing: 0">
+                                        <thead class="bg-[#FF9D40]">
+                                            <tr>
+                                            <th
+                                                class="w-[45%] whitespace-normal break-words top-0 z-10 border-b border-gray-300 bg-[#FF9D40]
+                                                    py-3 pl-4 pr-3 text-left text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
+                                            >
+                                                Teks
+                                            </th>
+                                            <th
+                                                class="w-[45%] whitespace-normal break-words top-0 z-10 hidden border-b border-gray-300 bg-[#FF9D40]
+                                                    px-3 py-3 text-left text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter sm:table-cell"
+                                            >
+                                                Hasil Preprocessing
+                                            </th>
+                                            <th
+                                                class="w-[10%] text-center whitespace-normal break-words top-0 z-10 hidden border-b border-gray-300 bg-[#FF9D40]
+                                                    px-3 py-3 text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter lg:table-cell"
+                                            >
+                                                Label
+                                            </th>
+                                            <th
+                                                class="w-[10%] text-center whitespace-normal break-words top-0 z-10 hidden border-b border-gray-300 bg-[#FF9D40]
+                                                    px-3 py-3 text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter lg:table-cell"
+                                            >
+                                                Identifikasi
+                                            </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-body" class="bg-white">
+                                            <!-- Baris data di-generate oleh JavaScript pagination -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="px-4 sm:px-6 lg:px-8 mt-4 flex flex-col">
+                        <div class="-my-2 -mx-4 sm:-mx-6 lg:-mx-8">
+                            <div class="inline-block min-w-full py-2 align-middle">
+                                <div class="shadow-sm">
+                                    <table class="w-full table-fixed border-separate" style="border-spacing: 0">
+                                        <thead class="bg-[#FF9D40]">
+                                            <tr>
+                                            <th
+                                                class="w-[45%] whitespace-normal break-words sticky top-0 z-10 border-b border-gray-300 bg-[#FF9D40]
+                                                    py-3 pl-4 pr-3 text-left text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
+                                            >
+                                                Teks
+                                            </th>
+                                            <th
+                                                class="w-[45%] whitespace-normal break-words sticky top-0 z-10 hidden border-b border-gray-300 bg-[#FF9D40]
+                                                    px-3 py-3 text-left text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter sm:table-cell"
+                                            >
+                                                Hasil Preprocessing
+                                            </th>
+                                            <th
+                                                class="w-[10%] text-center whitespace-normal break-words sticky top-0 z-10 hidden border-b border-gray-300 bg-[#FF9D40]
+                                                    px-3 py-3 text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter lg:table-cell"
+                                            >
+                                                Label
+                                            </th>
+                                            <th
+                                                class="w-[10%] text-center whitespace-normal break-words sticky top-0 z-10 hidden border-b border-gray-300 bg-[#FF9D40]
+                                                    px-3 py-3 text-sm font-semibold text-white
+                                                    backdrop-blur backdrop-filter lg:table-cell"
+                                            >
+                                                Identifikasi
+                                            </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white">
+                                            <tr>
+                                                <td colspan="4" class="whitespace-normal break-words border-b border-gray-200 px-3 py-3 text-center text-gray-900 hidden lg:table-cell font-normal text-base">Belum ada hasil.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+    
+            {% if classification_report %}
+            <h2 class="font-bold text-xl mt-8 mb-4">Classification Report dan Confusion Matrix</h2>
+            <div class="flex gap-16 mb-12">
+                <div class="w-1/2">
+                        <div class="inline-block min-w-full py-2 align-middle">
+                            <div class="shadow-sm">
+                                <table class="w-full table-fixed border-separate" style="border-spacing: 0">
+                                    <thead class="bg-gray-300">
+                                        <tr>
+                                        <th
+                                            class="w-[45%] whitespace-normal break-words sticky top-0 z-10 border-b border-gray-300 bg-gray-300
+                                                py-2 pl-4 pr-3 text-left text-sm font-semibold text-gray-900
+                                                backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
+                                        >
+                                            Class
+                                        </th>
+                                        <th
+                                            class="w-[45%] whitespace-normal break-words sticky top-0 z-10 hidden border-b border-gray-300 bg-gray-300
+                                                px-3 py-2 text-left text-sm font-semibold text-gray-900
+                                                backdrop-blur backdrop-filter sm:table-cell"
+                                        >
+                                            Precision
+                                        </th>
+                                        <th
+                                            class="w-[45%] whitespace-normal break-words sticky top-0 z-10 hidden border-b border-gray-300 bg-gray-300
+                                                px-3 py-2 text-left text-sm font-semibold text-gray-900
+                                                backdrop-blur backdrop-filter sm:table-cell"
+                                        >
+                                            Recall
+                                        </th>
+                                        <th
+                                            class="w-[45%] whitespace-normal break-words sticky top-0 z-10 hidden border-b border-gray-300 bg-gray-300
+                                                px-3 py-2 text-left text-sm font-semibold text-gray-900
+                                                backdrop-blur backdrop-filter sm:table-cell"
+                                        >
+                                            F1-Score
+                                        </th>
+                                        <th
+                                            class="w-[45%] whitespace-normal break-words sticky top-0 z-10 hidden border-b border-gray-300 bg-gray-300
+                                                px-3 py-2 text-left text-sm font-semibold text-gray-900
+                                                backdrop-blur backdrop-filter sm:table-cell"
+                                        >
+                                            Support
+                                        </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, metrics in classification_report.items() %}
+                                            {% if key != 'accuracy' and metrics is mapping %}
+                                            <tr>
+                                                <td class="whitespace-normal break-words border-b border-gray-200 px-3 py-4 text-sm text-gray-900 hidden sm:table-cell">{{ key }}</td>
+                                                <td class="whitespace-normal break-words border-b border-gray-200 px-3 py-4 text-sm text-gray-900 hidden sm:table-cell">{{ metrics.precision|round(4) }}</td>
+                                                <td class="whitespace-normal break-words border-b border-gray-200 px-3 py-4 text-sm text-gray-900 hidden sm:table-cell">{{ metrics.recall|round(4) }}</td>
+                                                <td class="whitespace-normal break-words border-b border-gray-200 px-3 py-4 text-sm text-gray-900 hidden sm:table-cell">{{ metrics['f1-score']|round(4) }}</td>
+                                                <td class="whitespace-normal break-words border-b border-gray-200 px-3 py-4 text-sm text-gray-900 hidden sm:table-cell">{{ metrics.support }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <tr>
+                                            <td class="whitespace-normal break-words border-b border-gray-200 px-3 py-4 text-sm text-gray-900 hidden sm:table-cell font-bold">Accuracy</td>
+                                            <td class="whitespace-normal break-words border-b border-gray-200 px-3 py-4 text-sm text-gray-900 hidden sm:table-cell" colspan="4">{{ classification_report.accuracy|round(4) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% if heatmap_image %}
+                    <div class="w-1/2 mx-auto">
+                        <img src="{{ url_for('static', filename=heatmap_image) }}" alt="Confusion Matrix Heatmap" class="w-full">
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        function updateFileName() {
+            var input = document.getElementById('file_input');
+            var fileName = input.files.length > 0 ? input.files[0].name : 'No file chosen';
+            document.getElementById('file_name').textContent = fileName;
+        }
+
+        function showLoading() {
+            document.getElementById('loading-indicator').style.display = 'flex';
+            var tableContainer = document.getElementById('table-container');
+            if(tableContainer){
+            tableContainer.style.display = 'none';
+            }
+            return true;
+        }
+
+        document.getElementById('trainForm').addEventListener('submit', function(e) {
+            e.preventDefault();  
+            showLoading();      
+
+            setTimeout(() => {
+            e.target.submit();
+            }, 100);
+        });
+    </script>
+    {% if df_display is defined and df_display %}
+        <script>
+        const dfPreviewData = JSON.parse('{{ df_display|tojson }}');
+        </script>
+        {% else %}
+        <script>
+        const dfPreviewData = [];
+        </script>
+    {% endif %}
+    <script>
+        let currentPage = 1;
+        let pageSize = 10;
+        const totalData = dfPreviewData.length;
+
+        const pageSizeSelect = document.getElementById("page-size");
+        const tableBody = document.getElementById("table-body");
+        const prevBtn = document.getElementById("prev-btn");
+        const nextBtn = document.getElementById("next-btn");
+        const pageInfo = document.getElementById("page-info");
+
+        function renderTable(page, size) {
+        // Hitung startIndex dan endIndex
+        const startIndex = (page - 1) * size;
+        const endIndex = page * size;
+
+        // Potong data sesuai halaman
+        const slicedData = dfPreviewData.slice(startIndex, endIndex);
+
+        // Bersihkan isi tableBody
+        tableBody.innerHTML = "";
+
+        // Generate baris
+        slicedData.forEach(row => {
+            const tr = document.createElement("tr");
+
+            // Kolom Teks
+            const tdText = document.createElement("td");
+            tdText.className = "whitespace-normal break-words border-b border-gray-200 py-3 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 lg:pl-8";
+            tdText.textContent = row["text"] || "";
+            tr.appendChild(tdText);
+
+            // Kolom Hasil Preprocessing (stop_result)
+            const tdPre = document.createElement("td");
+            tdPre.className = "whitespace-normal break-words border-b border-gray-200 px-3 py-3 text-sm text-gray-900 hidden sm:table-cell";
+            tdPre.textContent = row["stop_result"] || "";
+            tr.appendChild(tdPre);
+
+            // Kolom Label
+            const tdLabel = document.createElement("td");
+            tdLabel.className = "whitespace-normal break-words border-b border-gray-200 px-3 py-3 text-sm text-center text-gray-900 hidden lg:table-cell";
+            tdLabel.textContent = (row["label"] === undefined || row["label"] === null) ? "" : row["label"];
+            tr.appendChild(tdLabel);
+
+            // Kolom Label
+            const tdPredict = document.createElement("td");
+            tdPredict.className = "whitespace-normal break-words border-b border-gray-200 px-3 py-3 text-sm text-center text-gray-900 hidden lg:table-cell";
+            tdPredict.textContent = (row["predicted_label"] === undefined || row["predicted_label"] === null) ? "" : row["predicted_label"];
+            tr.appendChild(tdPredict);
+
+            tableBody.appendChild(tr);
+        });
+
+        // Update prevBtn dan nextBtn
+        prevBtn.disabled = (page <= 1);
+        nextBtn.disabled = (endIndex >= totalData);
+
+        // Tampilkan info halaman
+        const totalPages = Math.ceil(totalData / size);
+        pageInfo.textContent = `Halaman ${page} dari ${totalPages}`;
+        }
+
+        // Event: ganti jumlah entries (pageSize)
+        pageSizeSelect.addEventListener("change", function() {
+        pageSize = parseInt(this.value);
+        currentPage = 1;
+        renderTable(currentPage, pageSize);
+        });
+
+        // Event: tombol Previous
+        prevBtn.addEventListener("click", function() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTable(currentPage, pageSize);
+        }
+        });
+
+        // Event: tombol Next
+        nextBtn.addEventListener("click", function() {
+        const totalPages = Math.ceil(totalData / pageSize);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderTable(currentPage, pageSize);
+        }
+        });
+
+        // Render pertama kali
+        renderTable(currentPage, pageSize);
+    </script>
+</body>
+</html>

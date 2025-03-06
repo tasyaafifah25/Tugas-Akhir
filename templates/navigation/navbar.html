@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <title>{% block title %}My App{% endblock %}</title>
+</head>
+<body>
+  <!-- Navbar sebagai komponen reusable -->
+    <div class="sticky top-0 z-50 shadow-md w-full py-4 bg-white mb-24">
+        <div class="container mx-auto">
+            <nav class="relative flex items-center justify-between sm:h-10 md:justify-center" aria-label="Global">
+                <div class="hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:left-0">
+                    <span class="inline-flex">
+                        <a href="/" class="font-bold text-2xl text-primary">Tugas Akhir</a>
+                    </span>
+                </div>
+                <div class="hidden md:absolute md:flex md:space-x-10 md:items-center md:justify-end md:inset-y-0 md:right-0">
+                    <a href="/" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'home' %} border-b-2 text-primary border-primary{% endif %}">Beranda</a>
+                    <a href="/training" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'training' %} border-b-2 text-primary border-primary{% endif %}">Training</a>
+                    <a href="/testing" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'testing' %} border-b-2 text-primary border-primary{% endif %}">Testing</a>
+                    <a href="/user-input" class="font-medium text-base text-gray-600 hover:text-primary{% if active_page == 'user-input' %} border-b-2 text-primary border-primary{% endif %}">User Input</a>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <!-- Tempat konten halaman -->
+    {% block content %}{% endblock %}
+</body>
+</html>
