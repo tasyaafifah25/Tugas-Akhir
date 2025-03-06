@@ -9,3 +9,4 @@ gensim
 scikit-learn
 scikeras
 Sastrawi
+scipy
